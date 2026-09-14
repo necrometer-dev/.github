@@ -1,0 +1,24 @@
+name: necrometer
+on:
+  schedule: [{cron: "17 6 * * *"}]   # daily
+  workflow_dispatch:                  # manual "run now"
+permissions: { contents: write }
+jobs:
+  necrometer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: necrometer-dev/necrometer-action@v1
+        with:
+          token: ${{ secrets.NECRO_TOKEN || secrets.GITHUB_TOKEN }}
+          subject: necrometer-dev
+          file: necrometer.svg
+      - name: sync profile svg
+        run: |
+          mkdir -p profile
+          cp necrometer.svg profile/necrometer.svg
+          git config user.name "necrometer[bot]"
+          git config user.email "bot@necrometer.dev"
+          git add profile/necrometer.svg
+          git diff --cached --quiet || git commit -m "necrometer: sync profile/necrometer.svg $(date +%F)"
+          git push || true
